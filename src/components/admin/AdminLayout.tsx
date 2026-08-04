@@ -3,9 +3,48 @@ import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { 
   BarChart3, Calendar, Users, Layers, UserCheck, Package as PackageIcon, 
-  CreditCard, TrendingUp, Megaphone, Settings, HelpCircle, X, Menu, ArrowUpRight 
+  CreditCard, TrendingUp, Megaphone, Settings, HelpCircle, X, Menu, ArrowUpRight,
+  GitBranch, DollarSign, Boxes, CalendarRange, Star
 } from 'lucide-react';
 import { Logo } from '../common/Logo';
+
+const NAV_GROUPS = [
+  {
+    label: 'Studio',
+    items: [
+      { id: 'dashboard',   label: 'Dashboard',    icon: BarChart3,     to: '/admin' },
+      { id: 'bookings',    label: 'Bookings',     icon: Calendar,      to: '/admin/bookings' },
+      { id: 'classes',     label: 'Classes',      icon: Layers,        to: '/admin/classes' },
+      { id: 'rota',        label: 'Staff Rota',   icon: CalendarRange, to: '/admin/rota' },
+    ],
+  },
+  {
+    label: 'CRM',
+    items: [
+      { id: 'crm',         label: 'Client Pipeline', icon: GitBranch,  to: '/admin/crm' },
+      { id: 'clients',     label: 'All Clients',   icon: Users,         to: '/admin/clients' },
+      { id: 'instructors', label: 'Instructors',   icon: UserCheck,     to: '/admin/instructors' },
+      { id: 'feedback',    label: 'Feedback & NPS',icon: Star,          to: '/admin/feedback' },
+    ],
+  },
+  {
+    label: 'Operations',
+    items: [
+      { id: 'packages',    label: 'Packages',     icon: PackageIcon,   to: '/admin/packages' },
+      { id: 'payments',    label: 'Payments',     icon: CreditCard,    to: '/admin/payments' },
+      { id: 'payroll',     label: 'Payroll',      icon: DollarSign,    to: '/admin/payroll' },
+      { id: 'inventory',   label: 'Inventory',    icon: Boxes,         to: '/admin/inventory' },
+    ],
+  },
+  {
+    label: 'Insights',
+    items: [
+      { id: 'reports',     label: 'Reports',      icon: TrendingUp,    to: '/admin/reports' },
+      { id: 'marketing',   label: 'Marketing',    icon: Megaphone,     to: '/admin/marketing' },
+      { id: 'settings',    label: 'Settings',     icon: Settings,      to: '/admin/settings' },
+    ],
+  },
+];
 
 export const AdminLayout: React.FC = () => {
   const { user } = useAuth();
@@ -29,7 +68,7 @@ export const AdminLayout: React.FC = () => {
 
       {/* Sidebar */}
       <aside className={`fixed md:relative z-50 w-64 h-full bg-white border-r border-[#e5e2eb] p-5 flex flex-col justify-between flex-shrink-0 transition-transform duration-300 ease-in-out overflow-y-auto ${isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
-        <div className="space-y-6">
+        <div className="space-y-5">
           <div className="pb-4 border-b border-[#e5e2eb] flex items-center justify-between">
             <Link to="/admin"><Logo size="md" /></Link>
             <button onClick={() => setIsMobileSidebarOpen(false)} className="md:hidden p-1 text-neutral-500 hover:bg-neutral-100 rounded-lg">
@@ -37,32 +76,29 @@ export const AdminLayout: React.FC = () => {
             </button>
           </div>
 
-          <nav className="space-y-1">
-            {[
-              { id: 'dashboard', label: 'Dashboard', icon: BarChart3, to: '/admin' },
-              { id: 'bookings', label: 'Bookings', icon: Calendar, to: '/admin/bookings' },
-              { id: 'clients', label: 'Clients', icon: Users, to: '/admin/clients' },
-              { id: 'classes', label: 'Classes', icon: Layers, to: '/admin/classes' },
-              { id: 'instructors', label: 'Instructors', icon: UserCheck, to: '/admin/instructors' },
-              { id: 'packages', label: 'Packages', icon: PackageIcon, to: '/admin/packages' },
-              { id: 'payments', label: 'Payments', icon: CreditCard, to: '/admin/payments' },
-              { id: 'reports', label: 'Reports', icon: TrendingUp, to: '/admin/reports' },
-              { id: 'marketing', label: 'Marketing', icon: Megaphone, to: '/admin/marketing' },
-              { id: 'settings', label: 'Settings', icon: Settings, to: '/admin/settings' },
-            ].map((item) => {
-              const Icon = item.icon;
-              const isActive = activeAdminNav === item.id || (item.id === 'dashboard' && activeAdminNav === '');
-              return (
-                <Link
-                  key={item.id}
-                  to={item.to}
-                  onClick={() => setIsMobileSidebarOpen(false)}
-                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold transition-all ${isActive ? 'bg-[#6b4cc6] text-white shadow-md shadow-[#6b4cc6]/20' : 'text-[#6b7280] hover:text-[#1c1c2b] hover:bg-[#f4f0fb]'}`}
-                >
-                  <Icon className="w-4 h-4" /><span>{item.label}</span>
-                </Link>
-              );
-            })}
+          {/* Grouped Nav */}
+          <nav className="space-y-5">
+            {NAV_GROUPS.map((group) => (
+              <div key={group.label}>
+                <p className="text-[9px] font-black uppercase tracking-[0.12em] text-[#9ca3af] mb-1.5 px-3.5">{group.label}</p>
+                <div className="space-y-0.5">
+                  {group.items.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = activeAdminNav === item.id || (item.id === 'dashboard' && activeAdminNav === '');
+                    return (
+                      <Link
+                        key={item.id}
+                        to={item.to}
+                        onClick={() => setIsMobileSidebarOpen(false)}
+                        className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold transition-all ${isActive ? 'bg-[#6b4cc6] text-white shadow-md shadow-[#6b4cc6]/20' : 'text-[#6b7280] hover:text-[#1c1c2b] hover:bg-[#f4f0fb]'}`}
+                      >
+                        <Icon className="w-4 h-4 flex-shrink-0" /><span>{item.label}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </nav>
         </div>
 

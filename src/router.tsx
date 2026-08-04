@@ -3,6 +3,7 @@ import { App } from './App';
 import { PublicWebsite } from './components/public/PublicWebsite';
 import { InstructorsPage } from './pages/public/InstructorsPage';
 import { MembershipsPage } from './pages/public/MembershipsPage';
+import { WebstorePage } from './pages/public/WebstorePage';
 import { SignInPage } from './pages/auth/SignInPage';
 import { SignUpPage } from './pages/auth/SignUpPage';
 import { BookingSchedule } from './components/booking/BookingSchedule';
@@ -29,6 +30,12 @@ import { AdminPaymentsPage } from './pages/admin/AdminPaymentsPage';
 import { AdminReportsPage } from './pages/admin/AdminReportsPage';
 import { AdminMarketingPage } from './pages/admin/AdminMarketingPage';
 import { AdminSettingsPage } from './pages/admin/AdminSettingsPage';
+// ERP & CRM
+import { AdminCRMPage } from './pages/admin/AdminCRMPage';
+import { AdminPayrollPage } from './pages/admin/AdminPayrollPage';
+import { AdminInventoryPage } from './pages/admin/AdminInventoryPage';
+import { AdminRotaPage } from './pages/admin/AdminRotaPage';
+import { AdminFeedbackPage } from './pages/admin/AdminFeedbackPage';
 
 export const router = createBrowserRouter([
   {
@@ -39,9 +46,9 @@ export const router = createBrowserRouter([
       { index: true,            element: <PublicWebsite /> },
       { path: 'instructors',   element: <InstructorsPage /> },
       { path: 'memberships',   element: <MembershipsPage /> },
+      { path: 'shop',          element: <WebstorePage /> },
       { path: 'signin',        element: <SignInPage /> },
       { path: 'signup',        element: <SignUpPage /> },
-      // Public booking schedule (accessible without auth)
       { path: 'book',          element: <BookingSchedule /> },
       { path: 'book/:slug',    element: <BookingCheckoutPage /> },
 
@@ -54,11 +61,11 @@ export const router = createBrowserRouter([
           </RequireAuth>
         ),
         children: [
-          { index: true,              element: <ClientDashboard /> },
-          { path: 'schedule',         element: <ClientSchedulePage /> },
-          { path: 'packages',         element: <ClientPackagesPage /> },
-          { path: 'history',          element: <BookingHistoryPage /> },
-          { path: 'profile',          element: <ProfilePage /> },
+          { index: true,          element: <ClientDashboard /> },
+          { path: 'schedule',     element: <ClientSchedulePage /> },
+          { path: 'packages',     element: <ClientPackagesPage /> },
+          { path: 'history',      element: <BookingHistoryPage /> },
+          { path: 'profile',      element: <ProfilePage /> },
         ],
       },
 
@@ -71,13 +78,22 @@ export const router = createBrowserRouter([
           </RequireAuth>
         ),
         children: [
+          // Studio
           { index: true,              element: <AdminOverviewPage /> },
           { path: 'bookings',         element: <AdminBookingsPage /> },
-          { path: 'clients',          element: <AdminClientsPage /> },
           { path: 'classes',          element: <AdminClassesPage /> },
+          { path: 'rota',             element: <AdminRotaPage /> },
+          // CRM
+          { path: 'crm',              element: <AdminCRMPage /> },
+          { path: 'clients',          element: <AdminClientsPage /> },
           { path: 'instructors',      element: <AdminInstructorsPage /> },
+          { path: 'feedback',         element: <AdminFeedbackPage /> },
+          // Operations
           { path: 'packages',         element: <AdminPackagesPage /> },
           { path: 'payments',         element: <AdminPaymentsPage /> },
+          { path: 'payroll',          element: <AdminPayrollPage /> },
+          { path: 'inventory',        element: <AdminInventoryPage /> },
+          // Insights
           { path: 'reports',          element: <AdminReportsPage /> },
           { path: 'marketing',        element: <AdminMarketingPage /> },
           { path: 'settings',         element: <AdminSettingsPage /> },
