@@ -146,6 +146,7 @@ export const AdminSettingsPage: React.FC = () => {
               { key: 'smsAlerts', title: 'SMS / M-Pesa Alerts', desc: 'Send automated SMS confirmation on successful payment.' },
               { key: 'dailySummary', title: 'Daily Studio Summary', desc: 'Receive a daily breakdown of class occupancy and revenue at 8 PM.' },
               { key: 'waitlistAutoNotify', title: 'Automated Waitlist Promotion', desc: 'Automatically move waitlisted clients into open slots upon cancellation.' },
+              { key: 'appTourEnabled', title: 'Guided App Tour & Feature Tooltips', desc: 'Enable step-by-step interactive onboarding tours and feature tooltips.' },
             ].map((item) => (
               <div key={item.key} className="flex items-center justify-between p-3 bg-[#fbf9fd] border border-[#e5e2eb] rounded-2xl">
                 <div>

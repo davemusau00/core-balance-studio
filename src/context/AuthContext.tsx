@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import type { User, Session } from '@supabase/supabase-js';
 
-export type UserRole = 'client' | 'admin';
+export type UserRole = 'client' | 'admin' | 'instructor';
 
 export interface AuthUser {
   id: string;
@@ -28,7 +28,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signUp: (email: string, password: string, name: string, phone: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
-  demoSignIn: (role: 'client' | 'admin') => Promise<void>;
+  demoSignIn: (role: UserRole) => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
 
@@ -38,9 +38,10 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const DEMO_CREDENTIALS = {
   client: { email: 'wambui@demo.corebalance.co.ke', password: 'demo_client_2026' },
   admin: { email: 'admin@corebalance.co.ke', password: 'demo_admin_2026' },
+  instructor: { email: 'amara@corebalance.co.ke', password: 'demo_instructor_2026' },
 };
 
-// Fallback demo profiles for when Supabase auth isn't fully configured
+// Fallback demo profiles
 const DEMO_CLIENT_PROFILE: AuthUser = {
   id: 'demo_client_wambui',
   email: 'wambui@demo.corebalance.co.ke',
@@ -71,6 +72,22 @@ const DEMO_ADMIN_PROFILE: AuthUser = {
   membershipRenewalDate: 'N/A',
   currentStreakWeeks: 0,
   classesThisMonth: 0,
+};
+
+const DEMO_INSTRUCTOR_PROFILE: AuthUser = {
+  id: 'demo_instructor_amara',
+  email: 'amara@corebalance.co.ke',
+  name: 'Amara Osei',
+  phone: '+254 712 345 678',
+  avatarUrl: 'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&q=80&w=300',
+  role: 'instructor',
+  classesRemaining: 0,
+  totalClassesPurchased: 0,
+  membershipName: 'Senior Instructor',
+  membershipStatus: 'ACTIVE',
+  membershipRenewalDate: 'N/A',
+  currentStreakWeeks: 12,
+  classesThisMonth: 28,
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -105,8 +122,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (_) {}
 
-    // Fallback: detect admin by email
     if (supabaseUser.email?.includes('admin')) return DEMO_ADMIN_PROFILE;
+    if (supabaseUser.email?.includes('amara') || supabaseUser.email?.includes('instructor')) return DEMO_INSTRUCTOR_PROFILE;
     return { ...DEMO_CLIENT_PROFILE, email: supabaseUser.email || '' };
   };
 
@@ -140,7 +157,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
-        // Fallback to demo mode if Supabase auth isn't configured
         if (email === DEMO_CREDENTIALS.client.email && password === DEMO_CREDENTIALS.client.password) {
           setUser(DEMO_CLIENT_PROFILE);
           setIsLoading(false);
@@ -148,6 +164,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
         if (email === DEMO_CREDENTIALS.admin.email && password === DEMO_CREDENTIALS.admin.password) {
           setUser(DEMO_ADMIN_PROFILE);
+          setIsLoading(false);
+          return { error: null };
+        }
+        if (email === DEMO_CREDENTIALS.instructor.email && password === DEMO_CREDENTIALS.instructor.password) {
+          setUser(DEMO_INSTRUCTOR_PROFILE);
           setIsLoading(false);
           return { error: null };
         }
@@ -203,11 +224,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setSession(null);
   };
 
-  const demoSignIn = async (role: 'client' | 'admin') => {
+  const demoSignIn = async (role: UserRole) => {
     setIsLoading(true);
-    const profile = role === 'admin' ? DEMO_ADMIN_PROFILE : DEMO_CLIENT_PROFILE;
-    // Small delay so loading feels real
-    await new Promise(r => setTimeout(r, 800));
+    let profile = DEMO_CLIENT_PROFILE;
+    if (role === 'admin') profile = DEMO_ADMIN_PROFILE;
+    if (role === 'instructor') profile = DEMO_INSTRUCTOR_PROFILE;
+
+    await new Promise(r => setTimeout(r, 600));
     setUser(profile);
     setIsLoading(false);
   };

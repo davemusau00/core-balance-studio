@@ -4,9 +4,11 @@ import { useAuth } from '../../context/AuthContext';
 import { 
   BarChart3, Calendar, Users, Layers, UserCheck, Package as PackageIcon, 
   CreditCard, TrendingUp, Megaphone, Settings, HelpCircle, X, Menu, ArrowUpRight,
-  GitBranch, DollarSign, Boxes, CalendarRange, Star
+  GitBranch, DollarSign, Boxes, CalendarRange, Star, Sparkles
 } from 'lucide-react';
 import { Logo } from '../common/Logo';
+import { HelpCenterModal } from '../common/HelpCenterModal';
+import { AppTour } from '../common/AppTour';
 
 const NAV_GROUPS = [
   {
@@ -50,6 +52,8 @@ export const AdminLayout: React.FC = () => {
   const { user } = useAuth();
   const location = useLocation();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [showHelpCenter, setShowHelpCenter] = useState(false);
+  const [showTour, setShowTour] = useState(false);
 
   const getActiveNav = () => {
     if (location.pathname === '/admin') return 'dashboard';
@@ -110,9 +114,18 @@ export const AdminLayout: React.FC = () => {
               <span>View Public Site</span><ArrowUpRight className="w-3.5 h-3.5" />
             </Link>
           </div>
-          <div className="flex items-center gap-2 text-xs text-[#6b7280] px-2 cursor-pointer hover:text-[#1c1c2b]">
+          <button
+            onClick={() => setShowHelpCenter(true)}
+            className="w-full flex items-center gap-2 text-xs text-[#6b7280] px-2 py-1 cursor-pointer hover:text-[#1c1c2b] transition-colors"
+          >
             <HelpCircle className="w-4 h-4 text-[#9ca3af]" /><span>Visit Help Center</span>
-          </div>
+          </button>
+          <button
+            onClick={() => setShowTour(true)}
+            className="w-full flex items-center gap-2 text-xs text-[#6b4cc6] font-semibold px-2 py-1 cursor-pointer hover:underline transition-colors"
+          >
+            <Sparkles className="w-4 h-4 text-[#6b4cc6]" /><span>Take Guided Tour</span>
+          </button>
         </div>
       </aside>
 
@@ -129,6 +142,10 @@ export const AdminLayout: React.FC = () => {
         {/* Nested Routes Outlet */}
         <Outlet context={{ user }} />
       </div>
+
+      {/* Modals */}
+      <HelpCenterModal isOpen={showHelpCenter} onClose={() => setShowHelpCenter(false)} />
+      <AppTour isOpen={showTour} onClose={() => setShowTour(false)} />
     </div>
   );
 };

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth, UserRole } from '../../context/AuthContext';
 import { Logo } from '../../components/common/Logo';
-import { Eye, EyeOff, ArrowRight, Sparkles, User, Shield } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight, Sparkles, User, Shield, GraduationCap } from 'lucide-react';
 
 export const SignInPage: React.FC = () => {
   const navigate = useNavigate();
@@ -14,7 +14,7 @@ export const SignInPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isDemoLoading, setIsDemoLoading] = useState<'client' | 'admin' | null>(null);
+  const [isDemoLoading, setIsDemoLoading] = useState<UserRole | null>(null);
 
   const from = (location.state as any)?.from?.pathname || '/dashboard';
 
@@ -28,11 +28,13 @@ export const SignInPage: React.FC = () => {
     navigate(from, { replace: true });
   };
 
-  const handleDemo = async (role: 'client' | 'admin') => {
+  const handleDemo = async (role: UserRole) => {
     setIsDemoLoading(role);
     await demoSignIn(role);
     setIsDemoLoading(null);
-    navigate(role === 'admin' ? '/admin' : '/dashboard', { replace: true });
+    if (role === 'admin') navigate('/admin', { replace: true });
+    else if (role === 'instructor') navigate('/instructor', { replace: true });
+    else navigate('/dashboard', { replace: true });
   };
 
   return (
@@ -51,41 +53,55 @@ export const SignInPage: React.FC = () => {
           <div className="text-center space-y-2">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#f4f0fb] border border-[#d3c2f0] text-xs font-semibold text-[#6b4cc6] mb-3">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>Client Portal</span>
+              <span>Studio Portal Sign In</span>
             </div>
             <h1 className="font-serif text-3xl font-bold text-[#1c1c2b]">Welcome back</h1>
             <p className="text-sm text-[#6b7280]">
-              Sign in to manage your classes & bookings.
+              Sign in to manage classes, bookings & studio operations.
             </p>
           </div>
 
           {/* Demo buttons */}
           <div className="space-y-2">
-            <p className="text-[11px] font-semibold text-[#9ca3af] uppercase tracking-wider text-center">Quick Demo Access</p>
-            <div className="grid grid-cols-2 gap-3">
+            <p className="text-[11px] font-semibold text-[#9ca3af] uppercase tracking-wider text-center">Instant Demo Sign In</p>
+            <div className="grid grid-cols-3 gap-2">
               <button
                 onClick={() => handleDemo('client')}
                 disabled={!!isDemoLoading}
-                className="flex items-center justify-center gap-2 px-4 py-3 bg-[#f4f0fb] hover:bg-[#e9e0f6] border border-[#d3c2f0] text-[#4e2f80] rounded-2xl text-xs font-semibold transition-all disabled:opacity-60"
+                className="flex flex-col items-center justify-center gap-1.5 p-3 bg-[#f4f0fb] hover:bg-[#e9e0f6] border border-[#d3c2f0] text-[#4e2f80] rounded-2xl text-xs font-semibold transition-all disabled:opacity-60"
               >
                 {isDemoLoading === 'client' ? (
                   <div className="w-4 h-4 border-2 border-[#6b4cc6] border-t-transparent rounded-full animate-spin" />
                 ) : (
-                  <User className="w-4 h-4" />
+                  <User className="w-4 h-4 text-[#6b4cc6]" />
                 )}
-                Demo Client
+                <span>Client</span>
               </button>
+
+              <button
+                onClick={() => handleDemo('instructor')}
+                disabled={!!isDemoLoading}
+                className="flex flex-col items-center justify-center gap-1.5 p-3 bg-[#e0f2fe] hover:bg-[#bae6fd] border border-sky-300 text-sky-900 rounded-2xl text-xs font-semibold transition-all disabled:opacity-60"
+              >
+                {isDemoLoading === 'instructor' ? (
+                  <div className="w-4 h-4 border-2 border-sky-600 border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <GraduationCap className="w-4 h-4 text-sky-600" />
+                )}
+                <span>Instructor</span>
+              </button>
+
               <button
                 onClick={() => handleDemo('admin')}
                 disabled={!!isDemoLoading}
-                className="flex items-center justify-center gap-2 px-4 py-3 bg-[#1c1c2b] hover:bg-black text-white rounded-2xl text-xs font-semibold transition-all disabled:opacity-60"
+                className="flex flex-col items-center justify-center gap-1.5 p-3 bg-[#1c1c2b] hover:bg-black text-white rounded-2xl text-xs font-semibold transition-all disabled:opacity-60"
               >
                 {isDemoLoading === 'admin' ? (
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
-                  <Shield className="w-4 h-4" />
+                  <Shield className="w-4 h-4 text-[#b894e6]" />
                 )}
-                Demo Admin
+                <span>Admin</span>
               </button>
             </div>
           </div>

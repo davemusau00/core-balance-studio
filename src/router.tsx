@@ -18,6 +18,10 @@ import { ClientPackagesPage } from './pages/client/ClientPackagesPage';
 import { BookingHistoryPage } from './pages/client/BookingHistoryPage';
 import { ProfilePage } from './pages/client/ProfilePage';
 
+// Instructor layout + pages
+import { InstructorLayout } from './components/instructor/InstructorLayout';
+import { InstructorDashboardPage } from './pages/instructor/InstructorDashboardPage';
+
 // Admin layout + pages
 import { AdminLayout } from './components/admin/AdminLayout';
 import { AdminOverviewPage } from './pages/admin/AdminOverviewPage';
@@ -66,6 +70,19 @@ export const router = createBrowserRouter([
           { path: 'packages',     element: <ClientPackagesPage /> },
           { path: 'history',      element: <BookingHistoryPage /> },
           { path: 'profile',      element: <ProfilePage /> },
+        ],
+      },
+
+      // ── Instructor portal (nested layout) ─────────────────────────
+      {
+        path: 'instructor',
+        element: (
+          <RequireAuth requireRole="instructor">
+            <InstructorLayout />
+          </RequireAuth>
+        ),
+        children: [
+          { index: true, element: <InstructorDashboardPage /> },
         ],
       },
 
