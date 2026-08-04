@@ -16,7 +16,7 @@ export const ClientDashboard: React.FC = () => {
   const upcomingBooking = isCanceled ? null : user?.upcomingBooking;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 pb-24 lg:pt-8">
+    <div className="space-y-6">
       {/* Welcome Banner */}
       <div className="relative bg-[#1c1c2b] text-white rounded-[32px] overflow-hidden p-6 sm:p-8 shadow-xl">
         <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-[#6b4cc6]/40 to-transparent rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none" />

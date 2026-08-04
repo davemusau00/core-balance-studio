@@ -2,19 +2,19 @@
 - `[/]` in progress tasks
 - `[x]` completed tasks
 
-# Missing Features Implementation
+# Admin Dashboard - Expand All Views
 
-## Phase 1: Admin Routing & Pages
-- `[x]` Refactor `AdminDashboard.tsx` into `AdminLayout.tsx`.
-- `[x]` Create `AdminOverviewPage.tsx`.
-- `[x]` Create `AdminClientsPage.tsx`.
-- `[x]` Create `AdminClassesPage.tsx`.
-- `[x]` Update `router.tsx` with nested `/admin` routes.
+## Pages Built
+- `[x]` AdminOverviewPage (`/admin`)
+- `[x]` AdminBookingsPage (`/admin/bookings`)
+- `[x]` AdminClientsPage (`/admin/clients`)
+- `[x]` AdminClassesPage (`/admin/classes`)
+- `[x]` AdminInstructorsPage (`/admin/instructors`)
+- `[x]` AdminPackagesPage (`/admin/packages`)
+- `[x]` AdminPaymentsPage (`/admin/payments`)
+- `[x]` AdminReportsPage (`/admin/reports`)
+- `[x]` AdminMarketingPage (`/admin/marketing`)
+- `[x]` AdminSettingsPage (`/admin/settings`)
 
-## Phase 2: Booking UX (Waitlist)
-- `[x]` Modify `BookingCheckoutPage.tsx` to detect full capacity.
-- `[x]` Implement "Join Waitlist" state (bypassing payment selection).
-
-## Phase 3: Client Dashboard UX
-- `[x]` Add "Cancel Booking" action to `ClientDashboard.tsx`.
-- `[x]` Wire "Pause Membership" modal in `ProfilePage.tsx`.
+## Router
+- `[x]` Wire all new pages into router.tsx
