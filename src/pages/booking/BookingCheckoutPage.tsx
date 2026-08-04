@@ -4,8 +4,9 @@ import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 import { usePackages } from '../../lib/hooks/usePackages';
 import { useApp } from '../../context/AppContext';
-import { ArrowLeft, Clock, Award, Shield, Sparkles, ChevronRight, Smartphone, CreditCard, ArrowRight } from 'lucide-react';
+import { ArrowLeft, Clock, Award, Shield, Sparkles, ChevronRight, Smartphone, CreditCard, ArrowRight, Share2 } from 'lucide-react';
 import type { ClassSession, PackageOption } from '../../types';
+import confetti from 'canvas-confetti';
 
 export const BookingCheckoutPage: React.FC = () => {
   const { slug } = useParams();
@@ -99,6 +100,12 @@ export const BookingCheckoutPage: React.FC = () => {
 
   const handleConfirmBooking = async () => {
     // Fake success
+    confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { y: 0.6 },
+      colors: ['#6b4cc6', '#b894e6', '#1f9d62']
+    });
     showToast('Booking Confirmed', `You are booked for ${session.title}!`, 'success');
     navigate('/dashboard');
   };
@@ -141,9 +148,19 @@ export const BookingCheckoutPage: React.FC = () => {
       <div className="max-w-xl mx-auto p-4 sm:p-6 space-y-6">
         {/* Class Hero Header */}
         <div>
-          <span className="text-xs font-medium uppercase text-[#6b4cc6] tracking-wider block mb-1">
-            {session.category}
-          </span>
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs font-medium uppercase text-[#6b4cc6] tracking-wider block">
+              {session.category}
+            </span>
+            <a 
+              href={`https://wa.me/?text=Join%20me%20for%20${encodeURIComponent(session.title)}%20at%20Core%20Balance!%20Check%20it%20out:%20https://corebalance.demo/book/${slug}`}
+              target="_blank" 
+              rel="noreferrer"
+              className="flex items-center gap-1.5 text-xs font-semibold text-[#6b4cc6] bg-[#f4f0fb] px-2 py-1 rounded-lg hover:bg-[#e9e0f6] transition-colors"
+            >
+              <Share2 className="w-3.5 h-3.5" /> Share
+            </a>
+          </div>
           <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#1c1c2b] text-balance">
             {session.title} <span className="italic font-normal text-[#6b4cc6]">with {session.instructor.name.split(' ')[0]}</span>
           </h2>
