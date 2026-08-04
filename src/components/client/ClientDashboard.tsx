@@ -1,14 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useApp } from '../../context/AppContext';
 import { useActivities } from '../../lib/hooks/useActivities';
-import { Calendar, ChevronRight, Activity, Bell, Settings, Plus, MapPin } from 'lucide-react';
+import { Calendar, ChevronRight, Activity, Bell, Settings, Plus, MapPin, User, X } from 'lucide-react';
 
 export const ClientDashboard: React.FC = () => {
   const { user } = useAuth();
+  const { showToast } = useApp();
   const { data: activities } = useActivities(user?.id || null);
 
-  const upcomingBooking = user?.upcomingBooking;
+  const [isCanceled, setIsCanceled] = useState(false);
+  
+  // Use mock upcoming booking if not canceled
+  const upcomingBooking = isCanceled ? null : user?.upcomingBooking;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-24 lg:pt-8">
@@ -105,8 +110,16 @@ export const ClientDashboard: React.FC = () => {
               <button className="flex-1 sm:flex-none px-4 py-2 bg-[#6b4cc6] text-white rounded-xl text-xs font-semibold hover:bg-[#5b3894] transition-colors shadow-sm text-center">
                 Check In
               </button>
-              <button className="flex-1 sm:flex-none px-4 py-2 bg-white border border-[#e5e2eb] text-[#33333f] rounded-xl text-xs font-semibold hover:bg-[#fbf9fd] transition-colors text-center">
-                Manage
+              <button 
+                onClick={() => {
+                  if(window.confirm('Are you sure you want to cancel this booking?')) {
+                    setIsCanceled(true);
+                    showToast('Booking Canceled', 'Your class has been canceled and your credit refunded.', 'success');
+                  }
+                }}
+                className="flex-1 sm:flex-none px-4 py-2 bg-white border border-[#e5e2eb] text-red-600 rounded-xl text-xs font-semibold hover:bg-red-50 transition-colors text-center flex items-center justify-center gap-1"
+              >
+                <X className="w-3.5 h-3.5" /> Cancel
               </button>
             </div>
           </div>

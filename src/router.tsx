@@ -9,7 +9,10 @@ import { ClientDashboard } from './components/client/ClientDashboard';
 import { ProfilePage } from './pages/client/ProfilePage';
 import { BookingHistoryPage } from './pages/client/BookingHistoryPage';
 import { BookingSchedule } from './components/booking/BookingSchedule';
-import { AdminDashboard } from './components/admin/AdminDashboard';
+import { AdminLayout } from './components/admin/AdminLayout';
+import { AdminOverviewPage } from './pages/admin/AdminOverviewPage';
+import { AdminClientsPage } from './pages/admin/AdminClientsPage';
+import { AdminClassesPage } from './pages/admin/AdminClassesPage';
 import { RequireAuth } from './components/common/RequireAuth';
 import { BookingCheckoutPage } from './pages/booking/BookingCheckoutPage';
 
@@ -54,9 +57,15 @@ export const router = createBrowserRouter([
         path: 'admin',
         element: (
           <RequireAuth requireRole="admin">
-            <AdminDashboard />
+            <AdminLayout />
           </RequireAuth>
         ),
+        children: [
+          { index: true, element: <AdminOverviewPage /> },
+          { path: 'clients', element: <AdminClientsPage /> },
+          { path: 'classes', element: <AdminClassesPage /> },
+          { path: '*', element: <AdminOverviewPage /> }, // Fallback for other mock routes
+        ],
       },
     ],
   },

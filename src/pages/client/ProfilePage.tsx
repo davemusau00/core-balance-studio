@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useApp } from '../../context/AppContext';
 import {
   User, Phone, Mail, CreditCard, Bell, Gift, LogOut,
-  ChevronRight, Copy, CheckCircle, Shield, Pause, Trash2, Camera
+  ChevronRight, Copy, CheckCircle, Shield, Pause, Trash2, Camera, X
 } from 'lucide-react';
 
 export const ProfilePage: React.FC = () => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, updateProfile } = useAuth();
+  const { showToast } = useApp();
   const navigate = useNavigate();
 
   const [isEditing, setIsEditing] = useState(false);
+  const [showPauseModal, setShowPauseModal] = useState(false);
   const [name, setName] = useState(user?.name || '');
   const [phone, setPhone] = useState(user?.phone || '');
   const [referralCopied, setReferralCopied] = useState(false);
@@ -27,6 +30,15 @@ export const ProfilePage: React.FC = () => {
   const handleSignOut = async () => {
     await signOut();
     navigate('/');
+  };
+
+  const handlePauseMembership = async () => {
+    setShowPauseModal(false);
+    // Simulate updating backend
+    if (updateProfile) {
+      await updateProfile({ membershipStatus: 'PAUSED' });
+    }
+    showToast('Membership Paused', 'Your membership has been paused. You will not be billed.', 'success');
   };
 
   const membershipStatusColor = {
@@ -171,7 +183,7 @@ export const ProfilePage: React.FC = () => {
       <div className="bg-white border border-[#e5e2eb] rounded-3xl overflow-hidden">
         {[
           { icon: <Shield className="w-4 h-4 text-[#6b4cc6]" />, label: 'Privacy & Security', action: () => {} },
-          { icon: <Pause className="w-4 h-4 text-amber-600" />, label: 'Pause Membership', action: () => {} },
+          { icon: <Pause className="w-4 h-4 text-amber-600" />, label: 'Pause Membership', action: () => setShowPauseModal(true) },
         ].map(({ icon, label, action }) => (
           <button key={label} onClick={action} className="flex items-center justify-between w-full px-6 py-4 border-b border-[#e5e2eb] last:border-0 hover:bg-[#fbf9fd] transition-colors">
             <div className="flex items-center gap-3">
@@ -183,7 +195,6 @@ export const ProfilePage: React.FC = () => {
         ))}
       </div>
 
-      {/* Sign Out & Danger Zone */}
       <div className="space-y-3">
         <button
           onClick={handleSignOut}
@@ -199,6 +210,35 @@ export const ProfilePage: React.FC = () => {
           Delete Account
         </button>
       </div>
+
+      {/* Pause Modal */}
+      {showPauseModal && (
+        <div className="fixed inset-0 z-[60] bg-black/60 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-sm w-full p-6 text-center space-y-4 shadow-2xl">
+            <div className="w-12 h-12 bg-amber-50 rounded-full flex items-center justify-center mx-auto">
+              <Pause className="w-6 h-6 text-amber-600" />
+            </div>
+            <h3 className="font-serif text-xl font-bold text-[#1c1c2b]">Pause Membership?</h3>
+            <p className="text-sm text-[#6b7280]">
+              Pausing your membership will freeze your remaining classes and billing cycle for up to 30 days. You can resume at any time.
+            </p>
+            <div className="flex gap-3 pt-2">
+              <button 
+                onClick={() => setShowPauseModal(false)}
+                className="flex-1 py-3 bg-neutral-100 text-[#1c1c2b] font-semibold text-xs rounded-xl hover:bg-neutral-200 transition-colors"
+              >
+                Keep Active
+              </button>
+              <button 
+                onClick={handlePauseMembership}
+                className="flex-1 py-3 bg-amber-500 text-white font-semibold text-xs rounded-xl hover:bg-amber-600 transition-colors"
+              >
+                Confirm Pause
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

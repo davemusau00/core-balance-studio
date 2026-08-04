@@ -98,8 +98,10 @@ export const BookingCheckoutPage: React.FC = () => {
     return <div className="min-h-screen bg-[#fbf9fd] flex items-center justify-center">Class not found.</div>;
   }
 
+  const isFull = session.bookedCount >= session.capacity;
+
   const handleConfirmBooking = async () => {
-    // Fake success
+    // Fake success for actual booking
     confetti({
       particleCount: 100,
       spread: 70,
@@ -118,6 +120,17 @@ export const BookingCheckoutPage: React.FC = () => {
     }
 
     setIsSubmitting(true);
+    
+    if (isFull) {
+      // Waitlist flow - bypass payment
+      setTimeout(() => {
+        showToast('Waitlist Joined', `You have joined the waitlist for ${session.title}. We'll notify you if a spot opens!`, 'success');
+        navigate('/dashboard');
+        setIsSubmitting(false);
+      }, 1000);
+      return;
+    }
+
     if (paymentMethod === 'MPESA') {
       setShowStkPushScreen(true);
       setStkStatus('prompting');
@@ -240,29 +253,41 @@ export const BookingCheckoutPage: React.FC = () => {
         </div>
 
         {/* Payment */}
-        <div>
-          <h3 className="font-semibold text-sm text-[#1c1c2b] mb-2.5">Payment Method</h3>
-          <div className="grid grid-cols-2 gap-3">
-            <button type="button" onClick={() => setPaymentMethod('MPESA')} className={`p-3.5 rounded-2xl border flex items-center justify-center gap-2 transition-all font-medium text-xs ${paymentMethod === 'MPESA' ? 'border-[#1f9d62] bg-emerald-50 text-emerald-900 ring-2 ring-[#1f9d62]' : 'border-[#e5e2eb] bg-white text-[#6b7280]'}`}>
-              <Smartphone className="w-4 h-4 text-[#1f9d62]" />
-              <span className="font-bold text-[#1f9d62]">M-PESA</span>
-            </button>
-            <button type="button" onClick={() => setPaymentMethod('CARD')} className={`p-3.5 rounded-2xl border flex items-center justify-center gap-2 transition-all font-medium text-xs ${paymentMethod === 'CARD' ? 'border-[#6b4cc6] bg-[#f4f0fb] text-[#4e2f80] ring-2 ring-[#6b4cc6]' : 'border-[#e5e2eb] bg-white text-[#6b7280]'}`}>
-              <CreditCard className="w-4 h-4 text-[#6b4cc6]" />
-              <span className="text-center leading-tight">Card</span>
-            </button>
-          </div>
-          {paymentMethod === 'MPESA' && (
-            <div className="mt-3 bg-emerald-50/50 p-3 rounded-2xl border border-emerald-200/60">
-              <label className="block text-xs font-semibold text-emerald-900 mb-1.5">M-Pesa Mobile Number</label>
-              <input type="text" value={mpesaPhone} onChange={(e) => setMpesaPhone(e.target.value)} placeholder="0712345678" className="w-full px-3 py-2.5 bg-white rounded-xl border border-emerald-300 text-xs font-medium text-[#1c1c2b] focus:outline-none focus:ring-2 focus:ring-[#1f9d62]" />
+        {!isFull && (
+          <div>
+            <h3 className="font-semibold text-sm text-[#1c1c2b] mb-2.5">Payment Method</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <button type="button" onClick={() => setPaymentMethod('MPESA')} className={`p-3.5 rounded-2xl border flex items-center justify-center gap-2 transition-all font-medium text-xs ${paymentMethod === 'MPESA' ? 'border-[#1f9d62] bg-emerald-50 text-emerald-900 ring-2 ring-[#1f9d62]' : 'border-[#e5e2eb] bg-white text-[#6b7280]'}`}>
+                <Smartphone className="w-4 h-4 text-[#1f9d62]" />
+                <span className="font-bold text-[#1f9d62]">M-PESA</span>
+              </button>
+              <button type="button" onClick={() => setPaymentMethod('CARD')} className={`p-3.5 rounded-2xl border flex items-center justify-center gap-2 transition-all font-medium text-xs ${paymentMethod === 'CARD' ? 'border-[#6b4cc6] bg-[#f4f0fb] text-[#4e2f80] ring-2 ring-[#6b4cc6]' : 'border-[#e5e2eb] bg-white text-[#6b7280]'}`}>
+                <CreditCard className="w-4 h-4 text-[#6b4cc6]" />
+                <span className="text-center leading-tight">Card</span>
+              </button>
             </div>
-          )}
-        </div>
+            {paymentMethod === 'MPESA' && (
+              <div className="mt-3 bg-emerald-50/50 p-3 rounded-2xl border border-emerald-200/60">
+                <label className="block text-xs font-semibold text-emerald-900 mb-1.5">M-Pesa Mobile Number</label>
+                <input type="text" value={mpesaPhone} onChange={(e) => setMpesaPhone(e.target.value)} placeholder="0712345678" className="w-full px-3 py-2.5 bg-white rounded-xl border border-emerald-300 text-xs font-medium text-[#1c1c2b] focus:outline-none focus:ring-2 focus:ring-[#1f9d62]" />
+              </div>
+            )}
+          </div>
+        )}
+
+        {isFull && (
+          <div className="bg-amber-50 p-4 rounded-2xl border border-amber-200 flex items-start gap-3">
+            <Shield className="w-5 h-5 text-amber-600 flex-shrink-0" />
+            <div>
+              <h4 className="font-semibold text-sm text-amber-900">Class is Full</h4>
+              <p className="text-xs text-amber-700 mt-1">This class is currently at full capacity. Join the waitlist, and we'll notify you immediately if a spot opens up. You will not be charged unless you secure a spot.</p>
+            </div>
+          </div>
+        )}
 
         {/* Checkout CTA */}
-        <button onClick={handleSubmit} disabled={isSubmitting || !selectedPackage} className="w-full py-4 bg-[#6b4cc6] text-white rounded-2xl font-semibold text-sm flex items-center justify-center gap-2 mt-4 hover:bg-[#5b3894] disabled:opacity-50">
-          {isSubmitting ? 'Processing...' : `Pay KES ${selectedPackage?.priceKES.toLocaleString()}`} <ArrowRight className="w-4 h-4" />
+        <button onClick={handleSubmit} disabled={isSubmitting || (!selectedPackage && !isFull)} className="w-full py-4 bg-[#6b4cc6] text-white rounded-2xl font-semibold text-sm flex items-center justify-center gap-2 mt-4 hover:bg-[#5b3894] disabled:opacity-50">
+          {isSubmitting ? 'Processing...' : (isFull ? 'Join Waitlist' : `Pay KES ${selectedPackage?.priceKES.toLocaleString()}`)} <ArrowRight className="w-4 h-4" />
         </button>
       </div>
 
