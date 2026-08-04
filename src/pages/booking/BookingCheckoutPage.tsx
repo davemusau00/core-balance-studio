@@ -7,6 +7,7 @@ import { useApp } from '../../context/AppContext';
 import { ArrowLeft, Clock, Award, Shield, Sparkles, ChevronRight, Smartphone, CreditCard, ArrowRight, Share2 } from 'lucide-react';
 import type { ClassSession, PackageOption } from '../../types';
 import confetti from 'canvas-confetti';
+import { ReformerSpotPicker } from '../../components/booking/ReformerSpotPicker';
 
 export const BookingCheckoutPage: React.FC = () => {
   const { slug } = useParams();
@@ -21,6 +22,7 @@ export const BookingCheckoutPage: React.FC = () => {
   const [loadingSession, setLoadingSession] = useState(true);
   
   const [selectedPackage, setSelectedPackage] = useState<PackageOption | null>(null);
+  const [selectedSpot, setSelectedSpot] = useState<number | null>(4); // Default to spot 4
   const [paymentMethod, setPaymentMethod] = useState<'MPESA' | 'CARD'>('MPESA');
   const [mpesaPhone, setMpesaPhone] = useState<string>(user?.phone || '0712345678');
   
@@ -220,6 +222,16 @@ export const BookingCheckoutPage: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Reformer Bed Selector */}
+        {!isFull && (
+          <ReformerSpotPicker
+            totalCapacity={session.capacity || 12}
+            occupiedSpots={[2, 5, 8]}
+            selectedSpot={selectedSpot}
+            onSelectSpot={(spot) => setSelectedSpot(spot)}
+          />
+        )}
 
         {/* Packages */}
         <div>

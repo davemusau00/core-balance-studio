@@ -3,7 +3,9 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useApp } from '../../context/AppContext';
 import { useActivities } from '../../lib/hooks/useActivities';
-import { Calendar, ChevronRight, Activity, Bell, Settings, Plus, MapPin, User, X } from 'lucide-react';
+import { Calendar, ChevronRight, Activity, Bell, Settings, Plus, MapPin, User, X, QrCode, Sparkles } from 'lucide-react';
+import { DigitalPassModal } from './DigitalPassModal';
+import { AchievementsGrid } from './AchievementsGrid';
 
 export const ClientDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -11,6 +13,7 @@ export const ClientDashboard: React.FC = () => {
   const { data: activities } = useActivities(user?.id || null);
 
   const [isCanceled, setIsCanceled] = useState(false);
+  const [isPassOpen, setIsPassOpen] = useState(false);
   
   // Use mock upcoming booking if not canceled
   const upcomingBooking = isCanceled ? null : user?.upcomingBooking;
@@ -34,10 +37,18 @@ export const ClientDashboard: React.FC = () => {
               <h1 className="font-serif text-2xl font-bold">{user?.name?.split(' ')[0]}</h1>
             </div>
           </div>
-          <button className="relative w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors backdrop-blur-sm z-30">
-            <Bell className="w-5 h-5 text-white" />
-            <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-[#1c1c2b]" />
-          </button>
+          <div className="flex items-center gap-2 z-30">
+            <button
+              onClick={() => setIsPassOpen(true)}
+              className="px-3 py-2 rounded-full bg-[#6b4cc6] hover:bg-[#5b3894] text-white text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-md border border-white/20"
+            >
+              <QrCode className="w-4 h-4" /> Digital Pass
+            </button>
+            <button className="relative w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors backdrop-blur-sm">
+              <Bell className="w-5 h-5 text-white" />
+              <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-[#1c1c2b]" />
+            </button>
+          </div>
         </div>
 
         <div className="relative z-10 mt-8 grid grid-cols-2 gap-4">
@@ -170,16 +181,17 @@ export const ClientDashboard: React.FC = () => {
                   <span className="text-[10px] text-[#9ca3af] whitespace-nowrap">{activity.timestamp}</span>
                 </div>
                 <p className="text-xs text-[#6b7280] mt-0.5 truncate">{activity.subtitle}</p>
-                {activity.statusBadge && (
-                  <span className="inline-block mt-2 text-[10px] font-bold bg-[#f4f0fb] text-[#6b4cc6] px-2 py-0.5 rounded-full">
-                    {activity.statusBadge}
-                  </span>
-                )}
               </div>
             </div>
           ))}
         </div>
       </div>
+
+      {/* Achievements & Milestones */}
+      <AchievementsGrid />
+
+      {/* Digital Pass Modal */}
+      <DigitalPassModal isOpen={isPassOpen} onClose={() => setIsPassOpen(false)} />
     </div>
   );
 };

@@ -4,7 +4,7 @@ import { useApp } from '../../context/AppContext';
 import { useClassSessions } from '../../lib/hooks/useClassSessions';
 import { useInstructors } from '../../lib/hooks/useInstructors';
 import { 
-  Calendar, Users, TrendingUp, CreditCard, Search, Bell, Plus, X 
+  Calendar, Users, TrendingUp, CreditCard, Search, Bell, Plus, X, QrCode, Smartphone 
 } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, PieChart, Pie, Cell } from 'recharts';
 
@@ -16,6 +16,8 @@ export const AdminOverviewPage: React.FC = () => {
   const { data: instructors } = useInstructors();
 
   const [showAddClassModal, setShowAddClassModal] = useState(false);
+  const [showQrScanner, setShowQrScanner] = useState(false);
+  const [scannedClient, setScannedClient] = useState<string | null>(null);
   const [newTitle, setNewTitle] = useState('Reformer Flow');
   const [newTime, setNewTime] = useState('09:00 AM');
   const [newCapacity, setNewCapacity] = useState(12);
@@ -84,7 +86,16 @@ export const AdminOverviewPage: React.FC = () => {
         <div className="flex items-center gap-2 text-xs font-semibold text-[#33333f]">
           <Calendar className="w-4 h-4 text-[#6b4cc6]" /><span>May 18 – May 24, 2026</span>
         </div>
-        <button onClick={() => setShowAddClassModal(true)} className="w-full sm:w-auto px-4 py-2 bg-[#6b4cc6] hover:bg-[#5b3894] text-white rounded-xl text-xs font-semibold shadow-sm flex items-center justify-center gap-1.5 transition-all"><Plus className="w-4 h-4" /><span>Add Class Session</span></button>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <button
+            onClick={() => setShowQrScanner(true)}
+            className="flex-1 sm:flex-none px-3.5 py-2 bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
+          >
+            <QrCode className="w-4 h-4 text-emerald-700" />
+            <span>Scan Client Pass</span>
+          </button>
+          <button onClick={() => setShowAddClassModal(true)} className="flex-1 sm:flex-none px-4 py-2 bg-[#6b4cc6] hover:bg-[#5b3894] text-white rounded-xl text-xs font-semibold shadow-sm flex items-center justify-center gap-1.5 transition-all"><Plus className="w-4 h-4" /><span>Add Class Session</span></button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
@@ -223,6 +234,55 @@ export const AdminOverviewPage: React.FC = () => {
             </div>
             <button type="submit" className="w-full py-3 bg-[#6b4cc6] text-white font-semibold text-xs rounded-xl hover:bg-[#5b3894] shadow-md shadow-[#6b4cc6]/20">Publish to Studio Schedule</button>
           </form>
+        </div>
+      )}
+      {/* QR Code Check-in Modal */}
+      {showQrScanner && (
+        <div className="fixed inset-0 z-[60] bg-black/60 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-sm w-full p-6 text-center space-y-4 shadow-2xl animate-zoom-in">
+            <div className="flex items-center justify-between border-b border-[#e5e2eb] pb-3">
+              <h3 className="font-serif text-lg font-bold text-[#1c1c2b]">QR Studio Check-in</h3>
+              <button onClick={() => { setShowQrScanner(false); setScannedClient(null); }}>
+                <X className="w-5 h-5 text-neutral-400" />
+              </button>
+            </div>
+
+            {!scannedClient ? (
+              <div className="space-y-4 py-4">
+                <div className="w-40 h-40 bg-neutral-900 rounded-2xl mx-auto flex items-center justify-center relative overflow-hidden border-4 border-[#6b4cc6]">
+                  <QrCode className="w-24 h-24 text-white/40 animate-pulse" />
+                  <div className="absolute inset-x-0 top-1/2 h-0.5 bg-emerald-400 shadow-lg animate-bounce" />
+                </div>
+                <p className="text-xs text-[#6b7280]">Align member's digital QR pass in front of camera.</p>
+                <button
+                  onClick={() => {
+                    setScannedClient('Wambui Njeri');
+                    showToast('QR Verified', 'Member Wambui Njeri checked in to Reformer Flow', 'success');
+                  }}
+                  className="w-full py-2.5 bg-[#6b4cc6] text-white rounded-xl font-semibold text-xs hover:bg-[#5b3894]"
+                >
+                  Simulate QR Pass Scan
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-3 py-4">
+                <div className="w-16 h-16 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto text-2xl font-bold font-serif">
+                  ✓
+                </div>
+                <h4 className="font-bold text-base text-[#1c1c2b]">{scannedClient}</h4>
+                <span className="inline-block px-3 py-1 bg-emerald-50 text-emerald-800 text-xs font-bold rounded-full">
+                  10 Class Pack · Active
+                </span>
+                <p className="text-xs text-[#6b7280]">Checked in for 07:00 AM Reformer Flow</p>
+                <button
+                  onClick={() => { setShowQrScanner(false); setScannedClient(null); }}
+                  className="w-full py-2.5 bg-neutral-900 text-white rounded-xl font-semibold text-xs"
+                >
+                  Done
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </main>
