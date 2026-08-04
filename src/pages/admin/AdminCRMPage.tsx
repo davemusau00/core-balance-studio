@@ -1,32 +1,7 @@
 import React, { useState } from 'react';
-import { MessageSquare, AlertTriangle, TrendingUp, Users, Send, X, ChevronRight, Zap } from 'lucide-react';
+import { MessageSquare, AlertTriangle, TrendingUp, Users, Send, X, ChevronRight, Zap, Plus, FileText, Phone, Mail } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
-
-type LifecycleStage = 'lead' | 'trial' | 'active' | 'vip' | 'at_risk' | 'churned';
-
-interface CRMClient {
-  id: string;
-  name: string;
-  avatar: string;
-  email: string;
-  lastClass: string;
-  totalClasses: number;
-  ltv: number;
-  stage: LifecycleStage;
-  daysInactive: number;
-  membershipName: string;
-}
-
-const MOCK_CLIENTS: CRMClient[] = [
-  { id: 'c1', name: 'Wambui Njeri',  avatar: 'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=80', email: 'wambui@example.com',  lastClass: '2 days ago',   totalClasses: 64, ltv: 128000, stage: 'vip',      daysInactive: 2,  membershipName: 'Unlimited Monthly' },
-  { id: 'c2', name: 'Logan Mensah',  avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=80', email: 'logan@example.com',   lastClass: '18 days ago', totalClasses: 12, ltv: 26400,  stage: 'at_risk',  daysInactive: 18, membershipName: '10 Class Pack' },
-  { id: 'c3', name: 'Aisha Kamau',   avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80', email: 'aisha@example.com',   lastClass: '1 day ago',   totalClasses: 31, ltv: 62000,  stage: 'active',   daysInactive: 1,  membershipName: 'Unlimited Monthly' },
-  { id: 'c4', name: 'Brian Otieno',  avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80', email: 'brian@example.com',   lastClass: '5 days ago',  totalClasses: 5,  ltv: 11000,  stage: 'trial',    daysInactive: 5,  membershipName: '5 Class Pack' },
-  { id: 'c5', name: 'Sarah Wanjiku', avatar: 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=80', email: 'sarah@example.com',   lastClass: '35 days ago', totalClasses: 3,  ltv: 6600,   stage: 'churned',  daysInactive: 35, membershipName: 'None' },
-  { id: 'c6', name: 'Emeka Okafor',  avatar: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=80', email: 'emeka@example.com',   lastClass: 'Today',       totalClasses: 88, ltv: 176000, stage: 'vip',      daysInactive: 0,  membershipName: 'Unlimited Monthly' },
-  { id: 'c7', name: 'Grace Muthoni', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=80', email: 'grace@example.com',   lastClass: '20 days ago', totalClasses: 7,  ltv: 15400,  stage: 'at_risk',  daysInactive: 20, membershipName: '10 Class Pack' },
-  { id: 'c8', name: 'David Karanja', avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80', email: 'david@example.com',   lastClass: 'Never',       totalClasses: 0,  ltv: 0,      stage: 'lead',     daysInactive: 0,  membershipName: 'None' },
-];
+import { useCRM, LifecycleStage, CRMClient } from '../../lib/hooks/useCRM';
 
 const STAGES: { key: LifecycleStage; label: string; color: string; bg: string; description: string }[] = [
   { key: 'lead',     label: 'Leads',           color: 'text-neutral-600',   bg: 'bg-neutral-100',   description: 'Enquired, not yet booked' },
@@ -39,16 +14,25 @@ const STAGES: { key: LifecycleStage; label: string; color: string; bg: string; d
 
 export const AdminCRMPage: React.FC = () => {
   const { showToast } = useApp();
-  const [clients, setClients] = useState(MOCK_CLIENTS);
+  const { clients, moveClientStage, addInteraction } = useCRM();
+
   const [selectedClient, setSelectedClient] = useState<CRMClient | null>(null);
   const [activeStageFilter, setActiveStageFilter] = useState<LifecycleStage | 'all'>('all');
+  const [newNote, setNewNote] = useState('');
 
   const handleWinBack = (client: CRMClient) => {
-    setClients(prev => prev.map(c =>
-      c.id === client.id ? { ...c, stage: 'active', daysInactive: 0 } : c
-    ));
-    showToast('Win-Back Sent', `WhatsApp re-engagement sent to ${client.name.split(' ')[0]}.`, 'success');
+    moveClientStage(client.id, 'active');
+    addInteraction(client.id, 'whatsapp', `WhatsApp Win-Back promo sent to ${client.name.split(' ')[0]}.`);
+    showToast('Win-Back Sent', `Re-engagement promo sent to ${client.name.split(' ')[0]}. Stage updated to Active.`, 'success');
     setSelectedClient(null);
+  };
+
+  const handleAddNote = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedClient || !newNote.trim()) return;
+    addInteraction(selectedClient.id, 'clinical_note', newNote);
+    showToast('Interaction Saved', 'New CRM note added to client history.', 'success');
+    setNewNote('');
   };
 
   const filteredClients = activeStageFilter === 'all'
@@ -57,6 +41,9 @@ export const AdminCRMPage: React.FC = () => {
 
   const atRiskClients = clients.filter(c => c.stage === 'at_risk');
   const vipClients = clients.filter(c => c.stage === 'vip');
+
+  // Keep selectedClient fresh if state updates
+  const activeClient = selectedClient ? clients.find(c => c.id === selectedClient.id) || selectedClient : null;
 
   return (
     <main className="p-4 sm:p-8 space-y-6">
@@ -197,56 +184,88 @@ export const AdminCRMPage: React.FC = () => {
         )}
       </div>
 
-      {/* Client Action Modal */}
-      {selectedClient && (() => {
-        const stage = STAGES.find(s => s.key === selectedClient.stage)!;
+      {/* Client Action & Interaction History Drawer */}
+      {activeClient && (() => {
+        const stage = STAGES.find(s => s.key === activeClient.stage)!;
         return (
           <div className="fixed inset-0 z-[60] bg-black/60 flex items-end sm:items-center justify-center p-4">
-            <div className="bg-white rounded-3xl max-w-sm w-full p-6 space-y-5 shadow-2xl">
-              <div className="flex items-start justify-between">
+            <div className="bg-white rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto">
+              <div className="flex items-start justify-between border-b border-[#e5e2eb] pb-4">
                 <div className="flex items-center gap-3">
-                  <img src={selectedClient.avatar} alt={selectedClient.name} className="w-14 h-14 rounded-full object-cover" />
+                  <img src={activeClient.avatar} alt={activeClient.name} className="w-14 h-14 rounded-full object-cover" />
                   <div>
-                    <h3 className="font-bold text-base text-[#1c1c2b]">{selectedClient.name}</h3>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${stage.bg} ${stage.color}`}>{stage.label}</span>
+                    <h3 className="font-serif text-lg font-bold text-[#1c1c2b]">{activeClient.name}</h3>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${stage.bg} ${stage.color}`}>{stage.label}</span>
+                      <span className="text-[10px] text-[#6b7280]">{activeClient.membershipName}</span>
+                    </div>
                   </div>
                 </div>
                 <button onClick={() => setSelectedClient(null)}><X className="w-5 h-5 text-neutral-400" /></button>
               </div>
 
-              <div className="grid grid-cols-3 gap-3 text-center text-xs">
-                <div className="bg-[#fbf9fd] rounded-2xl p-3">
-                  <p className="font-serif text-xl font-bold text-[#6b4cc6]">{selectedClient.totalClasses}</p>
-                  <p className="text-[#6b7280] text-[10px]">Classes</p>
-                </div>
-                <div className="bg-[#fbf9fd] rounded-2xl p-3">
-                  <p className="font-serif text-xl font-bold text-[#1f9d62]">KES {(selectedClient.ltv/1000).toFixed(0)}K</p>
-                  <p className="text-[#6b7280] text-[10px]">LTV</p>
-                </div>
-                <div className="bg-[#fbf9fd] rounded-2xl p-3">
-                  <p className="font-serif text-xl font-bold text-amber-600">{selectedClient.daysInactive}d</p>
-                  <p className="text-[#6b7280] text-[10px]">Inactive</p>
+              {/* Move Stage Selector */}
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-[#9ca3af] uppercase tracking-wider">Change Stage</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {STAGES.map(s => (
+                    <button
+                      key={s.key}
+                      onClick={() => moveClientStage(activeClient.id, s.key)}
+                      className={`text-[10px] font-bold px-2.5 py-1 rounded-xl border transition-all ${
+                        activeClient.stage === s.key ? `${s.bg} ${s.color} border-current ring-1` : 'bg-white border-[#e5e2eb] text-[#6b7280]'
+                      }`}
+                    >
+                      {s.label}
+                    </button>
+                  ))}
                 </div>
               </div>
 
-              <p className="text-xs text-[#6b7280]">{selectedClient.email} · {selectedClient.membershipName}</p>
+              {/* Interaction History */}
+              <div className="space-y-3 pt-2">
+                <h4 className="font-bold text-xs text-[#1c1c2b] uppercase tracking-wider">Interaction History & Notes</h4>
 
-              <div className="space-y-2">
-                {(selectedClient.stage === 'at_risk' || selectedClient.stage === 'churned') && (
+                <form onSubmit={handleAddNote} className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newNote}
+                    onChange={e => setNewNote(e.target.value)}
+                    placeholder="Log a call, WhatsApp, or instructor note..."
+                    className="flex-1 px-3.5 py-2 bg-[#fbf9fd] border border-[#e5e2eb] rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#6b4cc6]"
+                  />
+                  <button type="submit" className="px-3.5 py-2 bg-[#6b4cc6] text-white rounded-xl text-xs font-semibold hover:bg-[#5b3894]">
+                    Add
+                  </button>
+                </form>
+
+                <div className="space-y-2 max-h-44 overflow-y-auto">
+                  {activeClient.interactions.length === 0 ? (
+                    <p className="text-xs text-neutral-400 italic">No previous interactions logged.</p>
+                  ) : (
+                    activeClient.interactions.map(int => (
+                      <div key={int.id} className="p-3 bg-[#fbf9fd] border border-[#e5e2eb] rounded-2xl text-xs space-y-1">
+                        <div className="flex items-center justify-between text-[10px] text-[#9ca3af]">
+                          <span className="font-bold text-[#6b4cc6]">{int.author} ({int.type})</span>
+                          <span>{int.timestamp}</span>
+                        </div>
+                        <p className="text-xs text-[#33333f]">{int.content}</p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2 pt-2 border-t border-[#e5e2eb]">
+                {(activeClient.stage === 'at_risk' || activeClient.stage === 'churned') && (
                   <button
-                    onClick={() => handleWinBack(selectedClient)}
+                    onClick={() => handleWinBack(activeClient)}
                     className="w-full flex items-center justify-center gap-2 py-3 bg-amber-500 text-white rounded-2xl font-semibold text-xs hover:bg-amber-600 transition-colors"
                   >
                     <MessageSquare className="w-4 h-4" /> Send WhatsApp Win-Back
                   </button>
                 )}
-                <button
-                  onClick={() => { showToast('Promo Issued', `30% discount code sent to ${selectedClient.name.split(' ')[0]}.`, 'success'); setSelectedClient(null); }}
-                  className="w-full flex items-center justify-center gap-2 py-3 bg-[#f4f0fb] text-[#6b4cc6] rounded-2xl font-semibold text-xs hover:bg-[#e9e0f6] transition-colors"
-                >
-                  <Zap className="w-4 h-4" /> Issue Promo Code (30% off)
-                </button>
-                <button onClick={() => setSelectedClient(null)} className="w-full py-3 border border-[#e5e2eb] rounded-2xl text-xs font-semibold text-[#6b7280] hover:bg-neutral-50">
+                <button onClick={() => setSelectedClient(null)} className="w-full py-2.5 border border-[#e5e2eb] rounded-2xl text-xs font-semibold text-[#6b7280] hover:bg-neutral-50">
                   Close
                 </button>
               </div>

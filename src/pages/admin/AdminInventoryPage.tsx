@@ -1,51 +1,9 @@
 import React, { useState } from 'react';
-import { Wrench, AlertTriangle, Package, ShoppingBag, Plus, Clock, CheckCircle, XCircle, TrendingDown } from 'lucide-react';
+import { Wrench, AlertTriangle, Package, ShoppingBag, Plus, Clock, CheckCircle, XCircle, TrendingDown, FileText, Printer } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { useInventory, EquipmentItem, RetailProduct } from '../../lib/hooks/useInventory';
 
-type EquipmentStatus = 'operational' | 'service_due' | 'maintenance' | 'retired';
-
-interface Equipment {
-  id: string;
-  name: string;
-  serialNo: string;
-  location: string;
-  status: EquipmentStatus;
-  lastServiced: string;
-  nextServiceDue: string;
-  notes: string;
-  daysUntilService: number;
-}
-
-interface RetailItem {
-  id: string;
-  name: string;
-  category: string;
-  sku: string;
-  price: number;
-  stock: number;
-  lowStockThreshold: number;
-}
-
-const EQUIPMENT: Equipment[] = [
-  { id: 'e1', name: 'Reformer Bed #1',        serialNo: 'RF-001', location: 'Studio 1', status: 'operational',  lastServiced: 'Jun 14, 2026', nextServiceDue: 'Sep 14, 2026', notes: 'Springs replaced. Footbar adjusted.', daysUntilService: 40 },
-  { id: 'e2', name: 'Reformer Bed #2',        serialNo: 'RF-002', location: 'Studio 1', status: 'service_due',  lastServiced: 'Mar 01, 2026', nextServiceDue: 'Aug 07, 2026', notes: 'Carriage alignment check needed.', daysUntilService: 2 },
-  { id: 'e3', name: 'Reformer Bed #3',        serialNo: 'RF-003', location: 'Studio 1', status: 'maintenance',  lastServiced: 'Jul 01, 2026', nextServiceDue: 'Aug 05, 2026', notes: 'Strap replacement in progress. Out of use.', daysUntilService: 0 },
-  { id: 'e4', name: 'Reformer Bed #4',        serialNo: 'RF-004', location: 'Studio 1', status: 'operational',  lastServiced: 'Jul 10, 2026', nextServiceDue: 'Oct 10, 2026', notes: 'All springs and pulleys checked.', daysUntilService: 66 },
-  { id: 'e5', name: 'Cadillac Machine',       serialNo: 'CAD-01', location: 'Studio 2', status: 'operational',  lastServiced: 'May 20, 2026', nextServiceDue: 'Aug 20, 2026', notes: 'Trapeze bar tightened.', daysUntilService: 15 },
-  { id: 'e6', name: 'Wunda Chair',            serialNo: 'WC-01',  location: 'Studio 2', status: 'operational',  lastServiced: 'Apr 12, 2026', nextServiceDue: 'Jul 12, 2026', notes: 'Pedal spring tension adjusted.', daysUntilService: -24 },
-  { id: 'e7', name: 'Ladder Barrel',          serialNo: 'LB-01',  location: 'Storage',  status: 'retired',     lastServiced: 'Jan 01, 2026', nextServiceDue: '—', notes: 'Decommissioned. Replacing next quarter.', daysUntilService: 0 },
-];
-
-const RETAIL: RetailItem[] = [
-  { id: 'r1', name: 'Pilates Grip Socks',       category: 'Accessories', sku: 'SOCK-001', price: 850,   stock: 42,  lowStockThreshold: 10 },
-  { id: 'r2', name: 'Core Balance Water Bottle', category: 'Accessories', sku: 'BTLE-001', price: 1800,  stock: 8,   lowStockThreshold: 10 },
-  { id: 'r3', name: 'Studio Pilates Mat (6mm)',  category: 'Equipment',   sku: 'MAT-001',  price: 4500,  stock: 3,   lowStockThreshold: 5 },
-  { id: 'r4', name: 'Resistance Band Set',       category: 'Equipment',   sku: 'BAND-003', price: 2200,  stock: 14,  lowStockThreshold: 5 },
-  { id: 'r5', name: 'Studio Towel (branded)',    category: 'Accessories', sku: 'TWEL-001', price: 1200,  stock: 2,   lowStockThreshold: 8 },
-  { id: 'r6', name: 'Core Balance Tote Bag',     category: 'Accessories', sku: 'TOTE-001', price: 1500,  stock: 19,  lowStockThreshold: 5 },
-];
-
-const statusConfig: Record<EquipmentStatus, { label: string; icon: any; color: string; bg: string }> = {
+const statusConfig = {
   operational:  { label: 'Operational',     icon: CheckCircle, color: 'text-emerald-700', bg: 'bg-emerald-50' },
   service_due:  { label: 'Service Due',     icon: AlertTriangle, color: 'text-amber-700',  bg: 'bg-amber-50' },
   maintenance:  { label: 'In Maintenance',  icon: Wrench,       color: 'text-rose-700',   bg: 'bg-rose-50' },
@@ -54,16 +12,32 @@ const statusConfig: Record<EquipmentStatus, { label: string; icon: any; color: s
 
 export const AdminInventoryPage: React.FC = () => {
   const { showToast } = useApp();
-  const [tab, setTab] = useState<'equipment' | 'retail'>('equipment');
-  const [equipment, setEquipment] = useState(EQUIPMENT);
-  const [cart, setCart] = useState<{ item: RetailItem; qty: number }[]>([]);
+  const { equipment, products, addMaintenanceLog, adjustStock } = useInventory();
 
-  const scheduleService = (id: string) => {
-    setEquipment(prev => prev.map(e => e.id === id ? { ...e, status: 'maintenance' } : e));
-    showToast('Service Scheduled', 'Equipment marked as In Maintenance and technician notified.', 'success');
+  const [tab, setTab] = useState<'equipment' | 'retail'>('equipment');
+  const [selectedEq, setSelectedEq] = useState<EquipmentItem | null>(null);
+  const [techName, setTechName] = useState('');
+  const [actionNotes, setActionNotes] = useState('');
+  const [costKES, setCostKES] = useState('12500');
+
+  const [cart, setCart] = useState<{ item: RetailProduct; qty: number }[]>([]);
+  const [lastReceipt, setLastReceipt] = useState<{ id: string; date: string; items: typeof cart; total: number } | null>(null);
+
+  const handleLogMaintenance = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedEq || !techName || !actionNotes) return;
+    addMaintenanceLog(selectedEq.id, techName, actionNotes, parseFloat(costKES) || 0);
+    showToast('Maintenance Logged', `Service logged for ${selectedEq.name}. Marked as Operational.`, 'success');
+    setSelectedEq(null);
+    setTechName('');
+    setActionNotes('');
   };
 
-  const addToCart = (item: RetailItem) => {
+  const addToCart = (item: RetailProduct) => {
+    if (item.stock <= 0) {
+      showToast('Out of Stock', `${item.name} has no remaining inventory.`, 'error');
+      return;
+    }
     setCart(prev => {
       const existing = prev.find(c => c.item.id === item.id);
       return existing
@@ -74,12 +48,22 @@ export const AdminInventoryPage: React.FC = () => {
 
   const checkout = () => {
     const total = cart.reduce((s, c) => s + c.item.price * c.qty, 0);
+    cart.forEach(c => adjustStock(c.item.id, -c.qty));
+
+    const receipt = {
+      id: `POS-${Math.floor(100000 + Math.random() * 900000)}`,
+      date: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+      items: cart,
+      total,
+    };
+
+    setLastReceipt(receipt);
     setCart([]);
-    showToast('Sale Complete', `KES ${total.toLocaleString()} — receipt issued.`, 'success');
+    showToast('Sale Complete', `Receipt ${receipt.id} generated — KES ${total.toLocaleString()}`, 'success');
   };
 
   const cartTotal = cart.reduce((s, c) => s + c.item.price * c.qty, 0);
-  const lowStockItems = RETAIL.filter(r => r.stock <= r.lowStockThreshold);
+  const lowStockItems = products.filter(r => r.stock <= r.lowStockThreshold);
   const needsAttention = equipment.filter(e => e.status === 'service_due' || e.status === 'maintenance');
 
   return (
@@ -108,7 +92,7 @@ export const AdminInventoryPage: React.FC = () => {
       {/* Tab Switch */}
       <div className="flex gap-1 bg-[#f4f0fb] p-1 rounded-2xl w-fit">
         <button onClick={() => setTab('equipment')} className={`px-5 py-2 rounded-xl text-xs font-semibold transition-all ${tab === 'equipment' ? 'bg-white text-[#6b4cc6] shadow-sm' : 'text-[#6b7280] hover:text-[#1c1c2b]'}`}>
-          <Wrench className="w-3.5 h-3.5 inline mr-1.5" />Equipment
+          <Wrench className="w-3.5 h-3.5 inline mr-1.5" />Equipment Maintenance
         </button>
         <button onClick={() => setTab('retail')} className={`px-5 py-2 rounded-xl text-xs font-semibold transition-all ${tab === 'retail' ? 'bg-white text-[#6b4cc6] shadow-sm' : 'text-[#6b7280] hover:text-[#1c1c2b]'}`}>
           <ShoppingBag className="w-3.5 h-3.5 inline mr-1.5" />Retail POS
@@ -121,31 +105,51 @@ export const AdminInventoryPage: React.FC = () => {
             const st = statusConfig[e.status];
             const Icon = st.icon;
             return (
-              <div key={e.id} className={`bg-white border rounded-3xl p-5 shadow-sm flex flex-col sm:flex-row sm:items-center gap-4 justify-between ${e.status === 'maintenance' ? 'border-rose-200' : e.status === 'service_due' ? 'border-amber-200' : 'border-[#e5e2eb]'}`}>
-                <div className="flex items-start gap-4 flex-1 min-w-0">
-                  <div className={`w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 ${st.bg}`}>
-                    <Icon className={`w-5 h-5 ${st.color}`} />
+              <div key={e.id} className={`bg-white border rounded-3xl p-5 shadow-sm space-y-3 ${e.status === 'maintenance' ? 'border-rose-200' : e.status === 'service_due' ? 'border-amber-200' : 'border-[#e5e2eb]'}`}>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
+                  <div className="flex items-start gap-4 flex-1 min-w-0">
+                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 ${st.bg}`}>
+                      <Icon className={`w-5 h-5 ${st.color}`} />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="font-bold text-sm text-[#1c1c2b]">{e.name}</h3>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${st.bg} ${st.color}`}>{st.label}</span>
+                      </div>
+                      <p className="text-[11px] text-[#9ca3af] mt-0.5">{e.serialNo} · {e.location}</p>
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="font-bold text-sm text-[#1c1c2b]">{e.name}</h3>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${st.bg} ${st.color}`}>{st.label}</span>
-                    </div>
-                    <p className="text-[11px] text-[#9ca3af] mt-0.5">{e.serialNo} · {e.location}</p>
-                    <p className="text-xs text-[#6b7280] mt-1 italic">"{e.notes}"</p>
-                    <div className="flex gap-4 mt-2 text-[10px] text-[#9ca3af] font-medium">
-                      <span><Clock className="w-3 h-3 inline mr-1" />Last: {e.lastServiced}</span>
-                      {e.nextServiceDue !== '—' && <span className={e.daysUntilService <= 7 ? 'text-amber-600 font-bold' : ''}><Clock className="w-3 h-3 inline mr-1" />Next: {e.nextServiceDue}</span>}
-                    </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => { setSelectedEq(e); setTechName(''); setActionNotes(''); }}
+                      className="px-4 py-2 bg-[#f4f0fb] text-[#6b4cc6] border border-[#d3c2f0] rounded-xl text-xs font-semibold hover:bg-[#e9e0f6] transition-colors whitespace-nowrap"
+                    >
+                      + Log Service
+                    </button>
                   </div>
                 </div>
-                {(e.status === 'service_due' || e.status === 'operational') && (
-                  <button
-                    onClick={() => scheduleService(e.id)}
-                    className="flex-shrink-0 px-4 py-2 bg-[#f4f0fb] text-[#6b4cc6] border border-[#d3c2f0] rounded-xl text-xs font-semibold hover:bg-[#e9e0f6] transition-colors whitespace-nowrap"
-                  >
-                    Schedule Service
-                  </button>
+
+                {/* Spring Life Progress Bar */}
+                <div className="space-y-1">
+                  <div className="flex justify-between text-[10px] font-bold text-[#6b7280]">
+                    <span>Spring Tension Health</span>
+                    <span>{e.springLifePercent}%</span>
+                  </div>
+                  <div className="h-2 w-full bg-neutral-100 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${e.springLifePercent > 60 ? 'bg-emerald-500' : e.springLifePercent > 30 ? 'bg-amber-500' : 'bg-rose-500'}`}
+                      style={{ width: `${e.springLifePercent}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Maintenance Log History */}
+                {e.maintenanceHistory.length > 0 && (
+                  <div className="pt-2 border-t border-[#f4f0fb] space-y-1 text-xs text-[#6b7280]">
+                    <span className="text-[9px] font-bold uppercase text-[#9ca3af]">Recent Log</span>
+                    <p className="italic">"{e.maintenanceHistory[0].actionTaken}" — <span className="font-semibold">{e.maintenanceHistory[0].technician}</span> ({e.maintenanceHistory[0].date})</p>
+                  </div>
                 )}
               </div>
             );
@@ -156,7 +160,7 @@ export const AdminInventoryPage: React.FC = () => {
           {/* Product Grid */}
           <div className="lg:col-span-2 space-y-3">
             <h3 className="font-bold text-sm text-[#1c1c2b]">Product Catalog</h3>
-            {RETAIL.map(item => {
+            {products.map(item => {
               const isLow = item.stock <= item.lowStockThreshold;
               return (
                 <div key={item.id} className={`bg-white border rounded-2xl p-4 flex items-center justify-between gap-4 ${isLow ? 'border-rose-200' : 'border-[#e5e2eb]'}`}>
@@ -170,13 +174,22 @@ export const AdminInventoryPage: React.FC = () => {
                       {isLow && <span className="text-[9px] font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded-md">LOW STOCK</span>}
                     </div>
                   </div>
-                  <div className="text-right flex-shrink-0">
-                    <p className="font-bold text-sm text-[#4e2f80]">KES {item.price.toLocaleString()}</p>
-                    <p className="text-[10px] text-[#6b7280]">{item.stock} in stock</p>
+
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1">
+                      <button onClick={() => adjustStock(item.id, -1)} className="w-6 h-6 rounded bg-neutral-100 text-xs font-bold">-</button>
+                      <span className="text-xs font-bold w-6 text-center">{item.stock}</span>
+                      <button onClick={() => adjustStock(item.id, 1)} className="w-6 h-6 rounded bg-neutral-100 text-xs font-bold">+</button>
+                    </div>
+
+                    <div className="text-right flex-shrink-0 min-w-[80px]">
+                      <p className="font-bold text-sm text-[#4e2f80]">KES {item.price.toLocaleString()}</p>
+                    </div>
+
+                    <button onClick={() => addToCart(item)} className="p-2 bg-[#6b4cc6] text-white rounded-xl hover:bg-[#5b3894] transition-colors flex-shrink-0">
+                      <Plus className="w-4 h-4" />
+                    </button>
                   </div>
-                  <button onClick={() => addToCart(item)} className="p-2 bg-[#6b4cc6] text-white rounded-xl hover:bg-[#5b3894] transition-colors flex-shrink-0">
-                    <Plus className="w-4 h-4" />
-                  </button>
                 </div>
               );
             })}
@@ -212,10 +225,89 @@ export const AdminInventoryPage: React.FC = () => {
                 disabled={cart.length === 0}
                 className="w-full py-3 bg-[#6b4cc6] rounded-xl text-xs font-bold hover:bg-[#5b3894] disabled:opacity-40 disabled:cursor-not-allowed transition-all"
               >
-                Checkout via M-Pesa
+                Checkout & Issue Receipt
               </button>
             </div>
+
+            {/* Generated Receipt Modal */}
+            {lastReceipt && (
+              <div className="mt-4 p-3 bg-white/10 border border-white/20 rounded-2xl space-y-2 text-xs">
+                <div className="flex items-center justify-between text-[#b894e6] font-bold text-[10px]">
+                  <span>RECEIPT {lastReceipt.id}</span>
+                  <span>{lastReceipt.date}</span>
+                </div>
+                <div className="text-[11px] space-y-1">
+                  {lastReceipt.items.map(i => (
+                    <div key={i.item.id} className="flex justify-between">
+                      <span>{i.item.name} ×{i.qty}</span>
+                      <span>KES {(i.item.price * i.qty).toLocaleString()}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="border-t border-white/10 pt-1.5 flex justify-between font-bold">
+                  <span>PAID M-PESA</span>
+                  <span>KES {lastReceipt.total.toLocaleString()}</span>
+                </div>
+              </div>
+            )}
           </div>
+        </div>
+      )}
+
+      {/* Maintenance Logging Modal */}
+      {selectedEq && (
+        <div className="fixed inset-0 z-[70] bg-black/60 flex items-center justify-center p-4">
+          <form onSubmit={handleLogMaintenance} className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+            <h3 className="font-serif font-bold text-base text-[#1c1c2b]">
+              Log Maintenance: {selectedEq.name}
+            </h3>
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="font-semibold block mb-1">Technician / Vendor</label>
+                <input
+                  type="text"
+                  value={techName}
+                  onChange={e => setTechName(e.target.value)}
+                  required
+                  placeholder="e.g. Kipchumba Equipment Mechanics"
+                  className="w-full p-3 bg-[#fbf9fd] border border-[#e5e2eb] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6b4cc6]"
+                />
+              </div>
+
+              <div>
+                <label className="font-semibold block mb-1">Cost (KES)</label>
+                <input
+                  type="number"
+                  value={costKES}
+                  onChange={e => setCostKES(e.target.value)}
+                  required
+                  className="w-full p-3 bg-[#fbf9fd] border border-[#e5e2eb] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6b4cc6]"
+                />
+              </div>
+
+              <div>
+                <label className="font-semibold block mb-1">Service & Action Details</label>
+                <textarea
+                  value={actionNotes}
+                  onChange={e => setActionNotes(e.target.value)}
+                  required
+                  placeholder="Replaced 4 red springs, cleaned carriage track, re-aligned footbar."
+                  rows={3}
+                  className="w-full p-3 bg-[#fbf9fd] border border-[#e5e2eb] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6b4cc6]"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <button type="button" onClick={() => setSelectedEq(null)} className="flex-1 py-2.5 border border-[#e5e2eb] rounded-xl text-xs font-semibold text-[#6b7280]">
+                Cancel
+              </button>
+              <button type="submit" className="flex-1 py-2.5 bg-[#6b4cc6] text-white rounded-xl text-xs font-semibold hover:bg-[#5b3894]">
+                Save Service Log
+              </button>
+            </div>
+          </form>
         </div>
       )}
     </main>

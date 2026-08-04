@@ -2,22 +2,23 @@
 - `[/]` in progress tasks
 - `[x]` completed tasks
 
-# Instructor Portal, App Tour & Help Center
+# Deep ERP/CRM Implementation & Documentation Architecture
 
-## 1. Auth & Demo Login
-- `[x]` Update `AuthContext.tsx` with `instructor` role & `demoInstructor`
-- `[x]` Update `SignInPage.tsx` with Demo Instructor login button
+## 1. Stateful Data Hooks
+- `[x]` Create `src/lib/hooks/useCRM.ts`
+- `[x]` Create `src/lib/hooks/usePayroll.ts`
+- `[x]` Create `src/lib/hooks/useInventory.ts`
 
-## 2. Instructor Portal
-- `[x]` Create `InstructorLayout.tsx`
-- `[x]` Create `InstructorDashboardPage.tsx` (Schedule, roster check-in, injury notes, earnings, sub requests)
+## 2. Interactive Admin Pages Update
+- `[x]` Upgrade `AdminCRMPage.tsx` with stateful stage moves & interaction timeline
+- `[x]` Upgrade `AdminPayrollPage.tsx` with batch M-Pesa B2C disbursements
+- `[x]` Upgrade `AdminInventoryPage.tsx` with maintenance logging & POS receipt generator
 
-## 3. App Tour & Help Center
-- `[x]` Create `AppTour.tsx` for interactive guided onboarding
-- `[x]` Create `HelpCenterModal.tsx` for searchable studio documentation
-- `[x]` Add Tour & Tooltip toggle to `AdminSettingsPage.tsx`
-- `[x]` Wire Help Center trigger in `AdminLayout.tsx` & `InstructorLayout.tsx`
+## 3. Codebase Documentation (`/docs`)
+- `[x]` Create `docs/ARCHITECTURE.md`
+- `[x]` Create `docs/ERP_CRM_GUIDE.md`
+- `[x]` Create `docs/INSTRUCTOR_PORTAL.md`
+- `[x]` Create `docs/DEPLOYMENT_GUIDE.md`
 
-## 4. Router & Verification
-- `[x]` Update `router.tsx` to register `/instructor`
-- `[ ]` Run `npm run build` to verify clean build
+## 4. Verification & Build
+- `[x]` Run `npm run build` to verify clean build
