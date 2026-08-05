@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabase';
-import { INITIAL_CLASS_SESSIONS, MOCK_INSTRUCTORS } from '../../data/mockData';
+import { MOCK_INSTRUCTORS } from '../../data/mockData';
+import { getDemoSessions } from '../demoStore';
 import type { ClassSession, Instructor } from '../../types';
 
 // Helper: map Supabase snake_case → camelCase ClassSession
@@ -52,7 +53,7 @@ interface UseClassSessionsOptions {
 
 export function useClassSessions(options: UseClassSessionsOptions = {}) {
   const { date, serviceFilter } = options;
-  const [data, setData] = useState<ClassSession[]>(INITIAL_CLASS_SESSIONS);
+  const [data, setData] = useState<ClassSession[]>(getDemoSessions());
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -75,10 +76,10 @@ export function useClassSessions(options: UseClassSessionsOptions = {}) {
       if (rows && rows.length > 0) {
         setData(rows.map(mapSession));
       }
-      // If no rows returned, keep mock data (demo mode)
+      if (!rows || rows.length === 0) setData(getDemoSessions());
     } catch (e: any) {
       setError(e.message);
-      // Silently fall back to mock data
+      setData(getDemoSessions());
     } finally {
       setIsLoading(false);
     }

@@ -6,17 +6,26 @@ import { useActivities } from '../../lib/hooks/useActivities';
 import { Calendar, ChevronRight, Activity, Bell, Settings, Plus, MapPin, User, X, QrCode, Sparkles } from 'lucide-react';
 import { DigitalPassModal } from './DigitalPassModal';
 import { AchievementsGrid } from './AchievementsGrid';
+import { updateDemoBooking, useDemoState } from '../../lib/demoStore';
 
 export const ClientDashboard: React.FC = () => {
   const { user } = useAuth();
   const { showToast } = useApp();
   const { data: activities } = useActivities(user?.id || null);
+  const demoState = useDemoState();
 
-  const [isCanceled, setIsCanceled] = useState(false);
   const [isPassOpen, setIsPassOpen] = useState(false);
-  
-  // Use mock upcoming booking if not canceled
-  const upcomingBooking = isCanceled ? null : user?.upcomingBooking;
+  const upcomingRecord = demoState.bookings.find(b => b.clientId === user?.id && (b.status === 'confirmed' || b.status === 'waitlisted'));
+  const upcomingBooking = upcomingRecord ? {
+    id: upcomingRecord.id,
+    classTitle: upcomingRecord.sessionTitle,
+    dateLabel: upcomingRecord.dateLabel,
+    time: upcomingRecord.time,
+    durationMinutes: 60,
+    instructorName: upcomingRecord.instructorName,
+    location: upcomingRecord.location,
+    category: 'classic' as const,
+  } : user?.upcomingBooking;
 
   return (
     <div className="space-y-6">
@@ -118,13 +127,13 @@ export const ClientDashboard: React.FC = () => {
             </div>
             
             <div className="flex flex-row sm:flex-col gap-2 mt-2 sm:mt-0">
-              <button className="flex-1 sm:flex-none px-4 py-2 bg-[#6b4cc6] text-white rounded-xl text-xs font-semibold hover:bg-[#5b3894] transition-colors shadow-sm text-center">
+              <button onClick={() => upcomingRecord && updateDemoBooking(upcomingRecord.id, { attendance: 'present' })} className="flex-1 sm:flex-none px-4 py-2 bg-[#6b4cc6] text-white rounded-xl text-xs font-semibold hover:bg-[#5b3894] transition-colors shadow-sm text-center">
                 Check In
               </button>
               <button 
                 onClick={() => {
                   if(window.confirm('Are you sure you want to cancel this booking?')) {
-                    setIsCanceled(true);
+                    if (upcomingRecord) updateDemoBooking(upcomingRecord.id, { status: 'cancelled' });
                     showToast('Booking Canceled', 'Your class has been canceled and your credit refunded.', 'success');
                   }
                 }}

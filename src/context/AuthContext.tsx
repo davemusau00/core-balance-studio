@@ -18,6 +18,16 @@ export interface AuthUser {
   membershipRenewalDate: string;
   currentStreakWeeks: number;
   classesThisMonth: number;
+  upcomingBooking?: {
+    id: string;
+    classTitle: string;
+    dateLabel: string;
+    time: string;
+    durationMinutes: number;
+    instructorName: string;
+    location: string;
+    category: 'classic' | 'therapy' | 'power' | 'sculpt' | 'clinical' | 'advanced';
+  };
 }
 
 interface AuthContextType {
@@ -30,6 +40,7 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   demoSignIn: (role: UserRole) => Promise<void>;
   refreshProfile: () => Promise<void>;
+  updateProfile: (updates: Partial<Pick<AuthUser, 'name' | 'phone' | 'membershipStatus'>>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -56,6 +67,10 @@ const DEMO_CLIENT_PROFILE: AuthUser = {
   membershipRenewalDate: '20 Jun 2026',
   currentStreakWeeks: 6,
   classesThisMonth: 6,
+  upcomingBooking: {
+    id: 'bk_upcoming_1', classTitle: 'Reformer Pilates', dateLabel: 'FRI 23 MAY', time: '07:00 AM',
+    durationMinutes: 60, instructorName: 'Logan N.', location: 'Core Balance Studio, Nairobi', category: 'classic'
+  },
 };
 
 const DEMO_ADMIN_PROFILE: AuthUser = {
@@ -242,6 +257,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const updateProfile = async (updates: Partial<Pick<AuthUser, 'name' | 'phone' | 'membershipStatus'>>) => {
+    setUser(current => current ? { ...current, ...updates } : current);
+    if (session?.user) {
+      await supabase.from('client_profiles').update({
+        ...(updates.name ? { name: updates.name } : {}),
+        ...(updates.phone ? { phone: updates.phone } : {}),
+        ...(updates.membershipStatus ? { membership_status: updates.membershipStatus } : {}),
+      }).eq('user_id', session.user.id);
+    }
+  };
+
   return (
     <AuthContext.Provider value={{
       user,
@@ -253,6 +279,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       signOut,
       demoSignIn,
       refreshProfile,
+      updateProfile,
     }}>
       {children}
     </AuthContext.Provider>

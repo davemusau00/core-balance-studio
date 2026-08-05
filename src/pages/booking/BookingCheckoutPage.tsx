@@ -8,6 +8,7 @@ import { ArrowLeft, Clock, Award, Shield, Sparkles, ChevronRight, Smartphone, Cr
 import type { ClassSession, PackageOption } from '../../types';
 import confetti from 'canvas-confetti';
 import { ReformerSpotPicker } from '../../components/booking/ReformerSpotPicker';
+import { addDemoBooking, addDemoNotification, getDemoSessions } from '../../lib/demoStore';
 
 export const BookingCheckoutPage: React.FC = () => {
   const { slug } = useParams();
@@ -79,7 +80,8 @@ export const BookingCheckoutPage: React.FC = () => {
           });
         }
       } catch (err) {
-        console.error(err);
+        const fallback = getDemoSessions().find(item => item.id === sessionId || item.slug === slug);
+        if (fallback) setSession(fallback);
       } finally {
         setLoadingSession(false);
       }
@@ -103,6 +105,29 @@ export const BookingCheckoutPage: React.FC = () => {
   const isFull = session.bookedCount >= session.capacity;
 
   const handleConfirmBooking = async () => {
+    if (user && session) {
+      addDemoBooking({
+        id: `bk_${Date.now()}`,
+        clientId: user.id,
+        clientName: user.name,
+        sessionId: session.id,
+        sessionTitle: session.title,
+        instructorName: session.instructor.name,
+        date: session.date,
+        dateLabel: session.dayLabel,
+        time: session.startTime,
+        location: session.location || 'Core Balance Studio, Spring Valley',
+        bedNumber: selectedSpot || 1,
+        packageName: selectedPackage?.name || 'Drop-in Class',
+        priceKES: selectedPackage?.priceKES || session.priceKES,
+        paymentMethod,
+        transactionRef: `${paymentMethod === 'MPESA' ? 'MP' : 'CARD'}-${Date.now().toString().slice(-6)}`,
+        status: 'confirmed',
+        attendance: 'pending',
+        createdAt: new Date().toISOString(),
+      });
+      addDemoNotification({ id: `booking-${Date.now()}`, title: 'Booking confirmed', message: `${session.title} on ${session.dayLabel} is now on your schedule.`, audience: 'client', read: false, createdAt: new Date().toISOString() });
+    }
     // Fake success for actual booking
     confetti({
       particleCount: 100,
@@ -282,6 +307,7 @@ export const BookingCheckoutPage: React.FC = () => {
               <div className="mt-3 bg-emerald-50/50 p-3 rounded-2xl border border-emerald-200/60">
                 <label className="block text-xs font-semibold text-emerald-900 mb-1.5">M-Pesa Mobile Number</label>
                 <input type="text" value={mpesaPhone} onChange={(e) => setMpesaPhone(e.target.value)} placeholder="0712345678" className="w-full px-3 py-2.5 bg-white rounded-xl border border-emerald-300 text-xs font-medium text-[#1c1c2b] focus:outline-none focus:ring-2 focus:ring-[#1f9d62]" />
+                <p className="text-[10px] text-emerald-800 mt-2">Demo mode: this simulates an STK push and creates a test receipt.</p>
               </div>
             )}
           </div>

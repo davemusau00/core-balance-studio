@@ -36,7 +36,7 @@ export interface ClassSession {
   capacity: number;
   bookedCount: number;
   waitlistCount: number;
-  status: 'available' | 'few-spots' | 'full' | 'cancelled';
+  status: 'available' | 'few-spots' | 'full' | 'cancelled' | 'in-progress' | 'completed';
   description?: string;
   benefits?: string[];
   location?: string;
@@ -52,6 +52,7 @@ export interface PackageOption {
   badgeText?: string;
   isBestValue?: boolean;
   description: string;
+  features?: string[];
 }
 
 export interface Booking {

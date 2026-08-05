@@ -4,9 +4,10 @@ interface LogoProps {
   className?: string;
   size?: 'sm' | 'md' | 'lg';
   showTagline?: boolean;
+  light?: boolean;
 }
 
-export const Logo: React.FC<LogoProps> = ({ className = '', size = 'md', showTagline = false }) => {
+export const Logo: React.FC<LogoProps> = ({ className = '', size = 'md', showTagline = false, light = false }) => {
   const iconSizes = {
     sm: 'w-7 h-7',
     md: 'w-9 h-9',
@@ -36,10 +37,10 @@ export const Logo: React.FC<LogoProps> = ({ className = '', size = 'md', showTag
       </div>
 
       <div className="flex flex-col">
-        <span className={`font-serif font-bold text-[#1c1c2b] uppercase leading-tight ${textSizes[size]}`}>
+        <span className={`font-serif font-bold ${light ? 'text-white' : 'text-[#1c1c2b]'} uppercase leading-tight ${textSizes[size]}`}>
           Core Balance
         </span>
-        <span className="text-[10px] font-sans uppercase tracking-[0.25em] text-[#6b7280] font-medium leading-tight">
+        <span className={`text-[10px] font-sans uppercase tracking-[0.25em] ${light ? 'text-white/60' : 'text-[#6b7280]'} font-medium leading-tight`}>
           Studio
         </span>
         {showTagline && (

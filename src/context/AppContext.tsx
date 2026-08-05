@@ -1,6 +1,10 @@
 import React, { createContext, useContext, useState } from 'react';
 
 interface AppContextType {
+  viewMode: 'public' | 'client' | 'admin';
+  setViewMode: (val: 'public' | 'client' | 'admin') => void;
+  activeTab: string;
+  setActiveTab: (val: string) => void;
   isMobileFrame: boolean;
   setIsMobileFrame: (val: boolean) => void;
   
@@ -13,6 +17,8 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [viewMode, setViewMode] = useState<'public' | 'client' | 'admin'>('public');
+  const [activeTab, setActiveTab] = useState('home');
   const [isMobileFrame, setIsMobileFrame] = useState<boolean>(false);
   const [toastInfo, setToastInfo] = useState<{ title: string; message: string; type?: 'success' | 'info' | 'warning' | 'error' } | null>(null);
 
@@ -28,6 +34,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   return (
     <AppContext.Provider
       value={{
+        viewMode,
+        setViewMode,
+        activeTab,
+        setActiveTab,
         isMobileFrame,
         setIsMobileFrame,
         toastInfo,

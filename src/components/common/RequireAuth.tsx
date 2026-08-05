@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 
 interface RequireAuthProps {
   children: React.ReactNode;
-  requireRole?: 'client' | 'admin';
+  requireRole?: 'client' | 'admin' | 'instructor';
 }
 
 export const RequireAuth: React.FC<RequireAuthProps> = ({ children, requireRole }) => {
@@ -29,6 +29,7 @@ export const RequireAuth: React.FC<RequireAuthProps> = ({ children, requireRole 
   if (requireRole && user?.role !== requireRole) {
     // Client trying to access admin → redirect to dashboard
     if (requireRole === 'admin') return <Navigate to="/dashboard" replace />;
+    if (requireRole === 'instructor') return <Navigate to="/dashboard" replace />;
     // Admin trying to access client → redirect to admin
     return <Navigate to="/admin" replace />;
   }

@@ -5,10 +5,11 @@ import { ClassSession } from '../../types';
 interface ClassCardProps {
   session: ClassSession;
   onBook: (session: ClassSession) => void;
-  onJoinWaitlist: (session: ClassSession) => void;
+  onJoinWaitlist?: (session: ClassSession) => void;
+  onWaitlist?: (session: ClassSession) => void;
 }
 
-export const ClassCard: React.FC<ClassCardProps> = ({ session, onBook, onJoinWaitlist }) => {
+export const ClassCard: React.FC<ClassCardProps> = ({ session, onBook, onJoinWaitlist, onWaitlist }) => {
   const spotsLeft = session.capacity - session.bookedCount;
   const isFull = spotsLeft <= 0;
 
@@ -90,7 +91,7 @@ export const ClassCard: React.FC<ClassCardProps> = ({ session, onBook, onJoinWai
 
           {isFull ? (
             <button
-              onClick={() => onJoinWaitlist(session)}
+              onClick={() => (onJoinWaitlist || onWaitlist)?.(session)}
               aria-label={`Join Waitlist for ${session.title} at ${session.startTime}`}
               className="min-h-[44px] min-w-[120px] px-4 py-2 text-xs font-semibold text-[#6b4cc6] bg-[#f4f0fb] hover:bg-[#e9e0f6] rounded-xl border border-[#d3c2f0] transition-colors"
             >

@@ -87,7 +87,7 @@ export const MembershipsPage: React.FC = () => {
 
                 <div className="mb-4">
                   <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 ${isUnlimited ? 'bg-white/10' : 'bg-[#f4f0fb]'}`}>
-                    {React.cloneElement(packageIcons[pkg.id] as React.ReactElement, {
+                    {React.cloneElement(packageIcons[pkg.id] as React.ReactElement<{ className?: string }>, {
                       className: `w-6 h-6 ${isUnlimited ? 'text-white' : 'text-[#6b4cc6]'}`
                     })}
                   </div>
